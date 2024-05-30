@@ -2,24 +2,17 @@
 
 ## 语言
 
-- [中文](README.md)  
+- [中文](README.md) 
 - [English](README_EN.md)
 
 
-参考论文：
-Zang, Chengxi, and Fei Wang. "MoFlow: an invertible flow model for generating molecular graphs." In Proceedings of the 26th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining, pp. 617-626. 2020.
-```
-https://arxiv.org/abs/2006.10137
-```
-参考代码：
-```
-https://github.com/cwohk1/moflow_plus
-```
+[参考论文](https://arxiv.org/abs/2006.10137)    [参考代码](https://github.com/cwohk1/moflow_plus)
+
 
 ## 0. 安装环境:
 从项目中克隆代码，执行以下操作：
 ```
-https://github.com/niushao12/moflow_paddle.git moflow_paddle
+git clone https://github.com/niushao12/moflow_paddle.git moflow_paddle
 ```
 Python版本3.9.0，CUDA 11.2，进入代码安装环境
 ```
@@ -47,10 +40,9 @@ cd mflow
 python train_model.py  --data_name zinc250k  --batch_size  256  --max_epochs 200 --gpu 0  --debug True  --save_dir=results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask   --b_n_flow 10  --b_hidden_ch 512,512  --a_n_flow 38  --a_hidden_gnn 256  --a_hidden_lin  512,64   --mask_row_size_list 1 --mask_row_stride_list 1  --noise_scale 0.6  --b_conv_lu 2  2>&1 | tee zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask.log
 ```
 #### 或者下载并使用我们在以下链接中训练好的模型：
-```
-链接：https://pan.baidu.com/s/19yz8WOxoNd0b4vnUWL8uNQ 
+
+[百度网盘](https://pan.baidu.com/s/19yz8WOxoNd0b4vnUWL8uNQ)
 提取码：bvor 
-```
 
 ## 3. 模型测试
 ### 3.1-实验：重构
@@ -115,10 +107,10 @@ python optimize_property.py -snapshot model_snapshot_epoch_200 --hyperparams_pat
 # 等等。
 ```
 #### 或者下载并使用我们在以下链接中训练好的模型：
-```
-链接：https://pan.baidu.com/s/19yz8WOxoNd0b4vnUWL8uNQ 
-提取码：bvor
-```
+
+[百度网盘](https://pan.baidu.com/s/19yz8WOxoNd0b4vnUWL8uNQ)
+提取码：bvor 
+
 #### 优化现有分子以获得优化后的QED得分的新分子
 ```python
 python optimize_property.py -snapshot model_snapshot_epoch_200 --hyperparams_path moflow-params.json --batch_size 256 --model_dir results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask --gpu 0 --data_name zinc250k --property_name qed --topk 2000 --property_model_path qed_model.pdparams --debug false --topscore 2>&1 | tee zinc250k_top_qed_optimized.log
