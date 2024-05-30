@@ -19,238 +19,134 @@ https://github.com/cwohk1/moflow_plus
 ## 0. 安装环境:
 从项目中克隆代码，执行以下操作：
 ```
-git clone https://github.com/calvin-zcx/moflow.git moflow
+https://github.com/niushao12/moflow_paddle.git moflow_paddle
 ```
 Python版本3.9.0，CUDA 11.2，进入代码安装环境
 ```
 cd moflow_paddle
+pip install -r requirements.txt
 ```
 
-
-
-## 1. Data Preprocessing
-To generate molecular graphs from SMILES strings
+## 1. 数据预处理
+从SMILES字符串生成分子图：
 ```
 cd data
 python data_preprocess.py --data_name qm9
 python data_preprocess.py --data_name zinc250k
 ```
 
-## 2. Model Training
-#### Training model for QM9 dataset:
+## 2. 模型训练
+#### 训练QM9数据集模型：
 ```
 cd mflow
 python train_model.py --data_name qm9  --batch_size 256  --max_epochs 200 --gpu 0  --debug True  --save_dir=results/qm9_64gnn_128-64lin_1-1mask_0d6noise_convlu1  --b_n_flow 10  --b_hidden_ch 128,128  --a_n_flow 27 --a_hidden_gnn 64  --a_hidden_lin 128,64  --mask_row_size_list 1 --mask_row_stride_list 1 --noise_scale 0.6 --b_conv_lu 1  2>&1 | tee qm9_64gnn_128-64lin_1-1mask_0d6noise_convlu1.log
 ```
-#### Training model for zinc250k dataset:
+#### 训练zinc250k数据集模型：
 ```
 cd mflow
 python train_model.py  --data_name zinc250k  --batch_size  256  --max_epochs 200 --gpu 0  --debug True  --save_dir=results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask   --b_n_flow 10  --b_hidden_ch 512,512  --a_n_flow 38  --a_hidden_gnn 256  --a_hidden_lin  512,64   --mask_row_size_list 1 --mask_row_stride_list 1  --noise_scale 0.6  --b_conv_lu 2  2>&1 | tee zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask.log
 ```
-#### Or downloading and  using our trained models in 
+#### 或者下载并使用我们在以下链接中训练好的模型：
 ```
-https://drive.google.com/drive/folders/1runxQnF3K_VzzJeWQZUH8VRazAGjZFNF 
+链接：https://pan.baidu.com/s/19yz8WOxoNd0b4vnUWL8uNQ 
+提取码：bvor 
 ```
 
-## 3. Model Testing
-
-### 3.1-Experiment: reconstruction  
-#### To reconstruct QM9 dataset:
+## 3. 模型测试
+### 3.1-实验：重构
+#### 重构QM9数据集：
 ```
 cd mflow
 python generate.py --model_dir results/qm9_64gnn_128-64lin_1-1mask_0d6noise_convlu1 -snapshot model_snapshot_epoch_200 --gpu 0 --data_name qm9  --hyperparams-path moflow-params.json --batch-size 256 --reconstruct  2>&1 | tee qm9_reconstruct_results.txt
 ```
-
-```
-### Results
-Tips:  results can be printed & dumped to a .txt file by  "2>&1 | tee qm9_reconstruct_results.txt"
-133885 in total, 120803  training data, 13082  testing data, 256 batchsize, train/batchsize 471.88671875
-...
-iter/total: 468/472, reconstruction_rate:1.0
-iter/total: 469/472, reconstruction_rate:1.0
-iter/total: 470/472, reconstruction_rate:1.0
-iter/total: 471/472, reconstruction_rate:1.0
-reconstruction_rate for all the train data:1.0 in 120803
-Invertible model! 100% reconstruction!
-```
-
-
-
-#### To reconstruct zinc250k dataset:
+#### 重构zinc250k数据集：
 ```
 cd mflow
 python generate.py --model_dir results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask  -snapshot model_snapshot_epoch_200 --gpu  0  --data_name zinc250k --hyperparams-path moflow-params.json --batch-size 256  --reconstruct   2>&1 | tee zinc250k_reconstruct_results.txt
 ```
-##### Results:
-```
-249455 in total, 224568  training data, 24887  testing data, 256 batchsize, train/batchsize 877.21875
-...
-iter/total: 877/878, reconstruction_rate:1.0
-reconstruction_rate for all the train data:1.0 in 224568
-Invertible model! 100% reconstruction!
-```
 
-### 3.2-Experiment: Random generation  
-
-#### Random Generation from sampling from latent space, QM9 model
-10000 samples * 5 times:
+### 3.2-实验：随机生成
+#### 从潜空间中进行随机生成，使用QM9模型
+10000个样本 * 5次：
 ```
 python generate.py --model_dir results/qm9_64gnn_128-64lin_1-1mask_0d6noise_convlu1 -snapshot model_snapshot_epoch_200 --gpu 0 --data_name qm9 --hyperparams-path moflow-params.json --batch-size 10000 --temperature 0.85 --delta 0.05 --n_experiments 5 --save_fig false --correct_validity true 2>&1 | tee qm9_random_generation.log
 ```
-#####  Results
-```
-validity: mean=100.00%, sd=0.00%, vals=[100.0, 100.0, 100.0, 100.0, 100.0]
-novelty: mean=98.05%, sd=0.12%, vals=[98.07731024763439, 98.11472930738985, 97.88434414668548, 97.95239055880573, 98.21877830331086]
-uniqueness: mean=99.26%, sd=0.09%, vals=[99.33999999999999, 99.19, 99.26, 99.14, 99.37]
-abs_novelty: mean=97.32%, sd=0.18%, vals=[97.43, 97.32, 97.16, 97.11, 97.6]
-abs_uniqueness: mean=99.26%, sd=0.09%, vals=[99.33999999999999, 99.19, 99.26, 99.14, 99.37]
-Task random generation done! Time 185.09 seconds, Data: Tue Sep 29 11:20:15 2020
-# Above is just one random result. Tuning:
-    --batch-size for the number of  mols to be generated
-    --temperature for different generation results, 
-    --correct_validity false for results without correction
-    --save_fig true for figures of generated mols, set batch-size a resoanble number for dump figures 
-# more details see parameter configuration in generate.py
-# Output details are in qm9_random_generation.log
-```
 
-#### Random Generation from sampling from latent space, zinc250k model
-10000 samples * 5 times:
+#### 从潜空间中进行随机生成，使用zinc250k模型
+10000个样本 * 5次：
 ```
 python generate.py --model_dir results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask  -snapshot model_snapshot_epoch_200 --gpu  0  --data_name zinc250k --hyperparams-path moflow-params.json   --temperature 0.85  --batch-size 10000 --n_experiments 5  --save_fig false --correct_validity true 2>&1 | tee zinc250k_random_generation.log
 ```
-#####  Results
-```
-validity: mean=100.00%, sd=0.00%, vals=[100.0, 100.0, 99.99, 100.0, 100.0]
-novelty: mean=100.00%, sd=0.00%, vals=[100.0, 100.0, 100.0, 100.0, 100.0]
-uniqueness: mean=99.99%, sd=0.01%, vals=[100.0, 99.98, 100.0, 99.99, 99.99]
-abs_novelty: mean=99.99%, sd=0.01%, vals=[100.0, 99.98, 99.99, 99.99, 99.99]
-abs_uniqueness: mean=99.99%, sd=0.01%, vals=[100.0, 99.98, 99.99, 99.99, 99.99]
-Task1 random generation done! Time 537.13 seconds, Data: Tue Sep 29 11:36:12 2020
-# Above is just one random result. Tuning:
-    --batch-size for the number of  mols to be generated
-    --temperature for different generation results, 
-    --correct_validity false for results without correction
-    --save_fig true for figures of generated mols, set batch-size a resoanble number for dump figures 
-# more details see parameter configuration in generate.py
-# Output details are in qm9_random_generation.log
-```
 
-### 3.3-Experiment: Interpolation generation & visualization
-
-#### Interpolation in the latent space, QM9 model
-interpolation between 2 molecules (molecular graphs)
+### 3.3-实验：插值生成和可视化
+#### 在潜空间中进行插值，使用QM9模型
+在两个分子之间进行插值（分子图）：
 ```
 python generate.py --model_dir results/qm9_64gnn_128-64lin_1-1mask_0d6noise_convlu1 -snapshot model_snapshot_epoch_200 --gpu 0 --data_name qm9  --hyperparams-path moflow-params.json --batch-size 1000  --temperature 0.65   --int2point --inter_times 50  --correct_validity true 2>&1 | tee qm9_visualization_int2point.log
 ```
-interpolation in a grid of molecules (molecular graphs)
+
+在分子网格中进行插值（分子图）：
 ```
-python generate.py --model_dir results/qm9_64gnn_128-64lin_1-1mask_0d6noise_convlu1 -snapshot model_snapshot_epoch_200 --gpu 0 --data_name qm9  --hyperparams-path moflow-params.json --batch-size 1000  --temperature 0.65 --delta 5  --intgrid  --inter_times 40  --correct_validity true 2>&1 | tee tee qm9_visualization_intgrid.log
+python generate.py --model_dir results/qm9_64gnn_128-64lin_1-1mask_0d6noise_convlu1 -snapshot model_snapshot_epoch_200 --gpu 0 --data_name qm9  --hyperparams-path moflow-params.json --batch-size 1000  --temperature 0.65 --delta 5  --intgrid  --inter_times 40  --correct_validity true 2>&1 | tee qm9_visualization_intgrid.log
 ```
 
-#### Interpolation in the latent space, zinc250k model
-interpolation between 2 molecules (molecular graphs)
+#### 在潜空间中进行插值，使用zinc250k模型
+在两个分子之间进行插值（分子图）：
 ```
-python generate.py --model_dir results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask  -snapshot model_snapshot_epoch_200 --gpu  0  --data_name zinc250k --hyperparams-path moflow-params.json --batch-size 1000  --temperature 0.8 --delta 0.5  --n_experiments 0 --correct_validity true   --int2point  --inter_times 10  2>&1 | tee zinc250k_visualization_int2point.log
+python generate.py --model_dir results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask  -snapshot model_snapshot_epoch_200 --gpu  0  --data_name zinc250k --hyperparams-path moflow-params.json   --batch-size 1000  --temperature 0.65   --int2point --inter_times 50  --correct_validity true 2>&1 | tee zinc250k_visualization_int2point.log
 ```
-interpolation in a grid of molecules (molecular graphs)
-```
-python generate.py --model_dir results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask  -snapshot model_snapshot_epoch_200 --gpu  0  --data_name zinc250k --hyperparams-path moflow-params.json --batch-size 1000  --temperature 0.8 --delta 5  --n_experiments 0 --correct_validity true   --intgrid --inter_times 2  2>&1 | tee zinc250k_visualization_intgrid.log
-```
-#### Some illustrations
-![interpolation](mflow/fig/output.png)
 
-
-![interpolation](mflow/fig/generated_interpolation_molecules_seed0_white.png)
-
-### 3.4-Experiment: Molecular optimization & constrained optimization
-#### Optimizing zinc250k w.r.t QED property
-#### Training an additional MLP from latent space to QED property
+在分子网格中进行插值（分子图）：
 ```
-python optimize_property.py -snapshot model_snapshot_epoch_200  --hyperparams_path moflow-params.json --batch_size 256 --model_dir results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask   --gpu 0 --max_epochs 3  --weight_decay 1e-3  --data_name zinc250k  --hidden 16,  --temperature 1.0  --property_name qed 2>&1 | tee  training_optimize_zinc250k_qed.log
-# Output: a molecular property prediction model for optimization, say named as qed_model.pt
-# e.g. saving qed regression model to: results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask/qed_model.pt
-# Train and save model done! Time 477.87 seconds 
-# Can tune:
-#         --max_epochs 3  
-#         --weight_decay 1e-3  
+python generate.py --model_dir results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask  -snapshot model_snapshot_epoch_200 --gpu  0  --data_name zinc250k --hyperparams-path moflow-params.json   --batch-size 1000  --temperature 0.65 --delta 5  --intgrid  --inter_times 40  --correct_validity true 2>&1 | tee zinc250k_visualization_intgrid.log
+```
+### 3.4-实验：分子优化和约束优化
+#### 优化zinc250k的QED属性
+#### 训练一个额外的MLP模型，从潜空间到QED属性
+```python
+python optimize_property.py -snapshot model_snapshot_epoch_200 --hyperparams_path moflow-params.json --batch_size 256 --model_dir results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask --gpu 0 --max_epochs 3 --weight_decay 1e-3 --data_name zinc250k --hidden 16 --temperature 1.0 --property_name qed 2>&1 | tee training_optimize_zinc250k_qed.log
+# 输出：一个用于优化的分子属性预测模型，例如命名为qed_model.pdparams
+# 例如，保存qed回归模型到：results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask/qed_model.pdparams
+# 训练并保存模型完成！时间 477.87 秒
+# 可以调整：
+#         --max_epochs 3
+#         --weight_decay 1e-3
 #         --hidden 16
-# etc.
+# 等等。
 ```
-#### Or downloading and  using our trained models in 
+#### 或者下载并使用我们在以下链接中训练好的模型：
 ```
-https://drive.google.com/drive/folders/1runxQnF3K_VzzJeWQZUH8VRazAGjZFNF 
+链接：https://pan.baidu.com/s/19yz8WOxoNd0b4vnUWL8uNQ 
+提取码：bvor
 ```
-#### To optimize existing molecules to get novel molecules with optimized QED scores
+#### 优化现有分子以获得优化后的QED得分的新分子
+```python
+python optimize_property.py -snapshot model_snapshot_epoch_200 --hyperparams_path moflow-params.json --batch_size 256 --model_dir results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask --gpu 0 --data_name zinc250k --property_name qed --topk 2000 --property_model_path qed_model.pdparams --debug false --topscore 2>&1 | tee zinc250k_top_qed_optimized.log
+# 输入：--property_model_path qed_model.pdparams 是回归模型
+# 输出：生成优化后的和新颖的分子的排序列表，与qed相关
 ```
-python optimize_property.py -snapshot model_snapshot_epoch_200  --hyperparams_path moflow-params.json --batch_size 256 --model_dir results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask   --gpu 0   --data_name zinc250k   --property_name qed --topk 2000  --property_model_path qed_model.pt --debug false  --topscore 2>&1 | tee  zinc250k_top_qed_optimized.log
-# Input: --property_model_path qed_model.pt is the regression model
-# Output: dump a ranked list of generated optimized and novel molecules w.r.t qed
-```
-#### Illustrations of molecules with top QED
-![Optimization](mflow/fig/top_qed2.png)
 
-#### Constrained Optimizing zinc250k w.r.t plogp(or qed) + similarity property
-#### to train an additional MLP from latent space to plogp property
+#### 约束优化zinc250k的plogp（或qed）+相似性属性
+#### 训练一个额外的MLP模型，从潜空间到plogp属性
+```python
+python optimize_property.py -snapshot model_snapshot_epoch_200 --hyperparams_path moflow-params.json --batch_size 256 --model_dir results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask --gpu 0 --max_epochs 3 --weight_decay 1e-2 --data_name zinc250k --hidden 16 --temperature 1.0 --property_name plogp 2>&1 | tee training_optimize_zinc250k_plogp.log
+# 输出：一个用于优化的分子属性预测模型，例如命名为plogp_model.pdparams
+# 例如，保存plogp回归模型到：results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask/plogp_model.pdparams
+# 训练并保存模型完成！时间 473.74 秒
+# 可以调整：
+#         --max_epochs 3
+#         --weight_decay 1e-2
+#         --hidden 16
+# 等等。
 ```
-python optimize_property.py -snapshot model_snapshot_epoch_200  --hyperparams_path moflow-params.json --batch_size 256 --model_dir results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask   --gpu 0  --max_epochs 3  --weight_decay 1e-2  --data_name zinc250k  --hidden 16,  --temperature 1.0  --property_name plogp 2>&1 | tee training_optimize_zinc250k_plogp.log
-# Output: a molecular property prediction model for optimization, say named as plogp_model.pt
-# e.g. saving plogp  regression model to: results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask/plogp_model.pt
-# Train and save model done! Time 473.74 seconds
-# Can tune:
-#         --max_epochs 3  
-#         --weight_decay 1e-2  
-#        --hidden 16
-#etc.
-```
-#### To optimize existing molecules to get novel molecules with optimized plogp scores and constrained similarity
-```
-python optimize_property.py -snapshot model_snapshot_epoch_200  --hyperparams_path moflow-params.json --batch_size 256 --model_dir results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask   --gpu 0    --data_name zinc250k    --property_name plogp --topk 800 --property_model_path qed_model.pt   --consopt  --sim_cutoff 0 2>&1 | tee  zinc250k_constrain_optimize_plogp.log
-# Input: --property_model_path qed_model.pt or plogp_model.pt is the regression model
-         --sim_cutoff 0 (or 0.2, 0.4 etc for similarity)
-         --topk 800 (choose first 800 molecules with worset property values for improving)
-# Output: 
-# Using qed_model.pt for optimizing plogp with 
-# Because qed and plogp have some correlations, here we use both qed/plogp model for 2 optimization tasks
-# --sim_cutoff 0:
-#   similarity: 0.300610 +/- 0.201674 
-#   Improvement:  8.612461 +/- 5.436995
-#   success rate: 0.98875
-# --sim_cutoff 0.2:
-#   similarity:  0.434700 +/-  0.196490 
-#   Improvement:  7.057115 +/-  5.041250
-#   success rate: 0.9675
-# --sim_cutoff 0.4:
-#   similarity:  0.608440 +/-   0.177670 
-#   Improvement:  4.712418 +/-   4.549682
-#   success rate: 0.8575
-# --sim_cutoff 0.6:
-#   similarity:   0.792550 +/- 0.144577   
-#   Improvement:   2.095266 +/-   2.858545  
-#   success rate:  0.5825
+#### 优化现有分子以获得优化后的plogp得分，并受到约束相似性的限制
+```python
+python optimize_property.py -snapshot model_snapshot_epoch_200 --hyperparams_path moflow-params.json --batch_size 256 --model_dir results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask --gpu 0 --data_name zinc250k --property_name plogp --topk 800 --property_model_path qed_model.pdparams --consopt --sim_cutoff 0 2>&1 | tee zinc250k_constrain_optimize_plogp.log
+# 输入：--property_model_path qed_model.pt或plogp_model.pt是回归模型
+#        --sim_cutoff 0（或0.2、0.4等相似性）
+#        --topk 800（选择前800个具有较差属性值的分子进行改进）
+# 输出：
+# 使用qed_model.pt优化plogp与
+# 因为qed和plogp有一定的相关性，所以我们在两个优化任务中同时使用qed/plogp模型
 
-# Using plogp_model.pt for optimizing plogp with 
-# --sim_cutoff 0:
-#    similarity:  0.260503 +/- 0.195945
-#   Improvement:  9.238813 +/-  6.279859
-#   success rate: 0.9925
-# --sim_cutoff 0.2:
-#    similarity:  0.425541 +/- 0.198020
-#    Improvement:  7.246221 +/-  5.325543
-#    success rate: 0.9575
-# --sim_cutoff 0.4:
-#    similarity:   0.625976 +/- 0.189293
-#    Improvement:  4.504411 +/-  4.712031
-#    success rate: 0.8425
-# --sim_cutoff 0.6:
-#    similarity:   0.810805 +/- 0.146080
-#    Improvement:  1.820525 +/-  2.595302
-#    success rate: 0.565
-```
-More configurations please refer to our codes optimize_property.py and the optimization chapter in our paper.
-#### One illustration of optimizing plogp
-![optimiation plogp](mflow/fig/copt.png)
-
-
-
-
+更多配置，请参考代码optimize_property.py和论文中的优化章节。

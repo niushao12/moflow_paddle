@@ -1,3 +1,5 @@
+# moflow_paddle
+
 ## language
 
 - [Chinese](README.md)  
@@ -16,24 +18,18 @@ Refer Code:
 https://github.com/cwohk1/moflow_plus
 ```
 
-## 0. Install Libs:
+## 0. Install Envs:
+
+To clone code from this project, see：
 ```
-conda create --name moflow python pandas matplotlib    (conda 4.6.7, python 3.8.5, pandas 1.1.2, matplotlib  3.3.2)
-conda activate moflow
-conda install pytorch torchvision cudatoolkit=10.2 -c pytorch (pytorch 1.6.0, torchvision 0.7.0)
-conda install rdkit  (rdkit 2020.03.6)
-conda install orderedset  (orderset 2.0.3)
-conda install tabulate  (tabulate 0.8.7)
-conda install networkx  (networkx 2.5)
-conda install scipy  (scipy 1.5.0)
-conda install seaborn  (seaborn 0.11.0)
-pip install cairosvg (cairosvg 2.4.2)
-pip install tqdm  (tqdm 4.50.0)
+https://github.com/niushao12/moflow_paddle.git moflow_paddle
 ```
-To clone code from this project, say
+Python 3.9.0，CUDA 11.2，Install Libs
 ```
-git clone https://github.com/calvin-zcx/moflow.git moflow
+cd moflow_paddle
+pip install -r requirements.txt
 ```
+
 ## 1. Data Preprocessing
 To generate molecular graphs from SMILES strings
 ```
@@ -55,7 +51,8 @@ python train_model.py  --data_name zinc250k  --batch_size  256  --max_epochs 200
 ```
 #### Or downloading and  using our trained models in 
 ```
-https://drive.google.com/drive/folders/1runxQnF3K_VzzJeWQZUH8VRazAGjZFNF 
+链接：https://pan.baidu.com/s/19yz8WOxoNd0b4vnUWL8uNQ 
+提取码：bvor 
 ```
 
 ## 3. Model Testing
@@ -79,8 +76,6 @@ iter/total: 471/472, reconstruction_rate:1.0
 reconstruction_rate for all the train data:1.0 in 120803
 Invertible model! 100% reconstruction!
 ```
-
-
 
 #### To reconstruct zinc250k dataset:
 ```
@@ -163,19 +158,13 @@ interpolation in a grid of molecules (molecular graphs)
 ```
 python generate.py --model_dir results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask  -snapshot model_snapshot_epoch_200 --gpu  0  --data_name zinc250k --hyperparams-path moflow-params.json --batch-size 1000  --temperature 0.8 --delta 5  --n_experiments 0 --correct_validity true   --intgrid --inter_times 2  2>&1 | tee zinc250k_visualization_intgrid.log
 ```
-#### Some illustrations
-![interpolation](mflow/fig/output.png)
-
-
-![interpolation](mflow/fig/generated_interpolation_molecules_seed0_white.png)
-
 ### 3.4-Experiment: Molecular optimization & constrained optimization
 #### Optimizing zinc250k w.r.t QED property
 #### Training an additional MLP from latent space to QED property
 ```
 python optimize_property.py -snapshot model_snapshot_epoch_200  --hyperparams_path moflow-params.json --batch_size 256 --model_dir results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask   --gpu 0 --max_epochs 3  --weight_decay 1e-3  --data_name zinc250k  --hidden 16,  --temperature 1.0  --property_name qed 2>&1 | tee  training_optimize_zinc250k_qed.log
-# Output: a molecular property prediction model for optimization, say named as qed_model.pt
-# e.g. saving qed regression model to: results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask/qed_model.pt
+# Output: a molecular property prediction model for optimization, say named as qed_model.pdparams
+# e.g. saving qed regression model to: results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask/qed_model.pdparams
 # Train and save model done! Time 477.87 seconds 
 # Can tune:
 #         --max_epochs 3  
@@ -185,23 +174,23 @@ python optimize_property.py -snapshot model_snapshot_epoch_200  --hyperparams_pa
 ```
 #### Or downloading and  using our trained models in 
 ```
-https://drive.google.com/drive/folders/1runxQnF3K_VzzJeWQZUH8VRazAGjZFNF 
+链接：https://pan.baidu.com/s/19yz8WOxoNd0b4vnUWL8uNQ 
+提取码：bvor 
 ```
 #### To optimize existing molecules to get novel molecules with optimized QED scores
 ```
-python optimize_property.py -snapshot model_snapshot_epoch_200  --hyperparams_path moflow-params.json --batch_size 256 --model_dir results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask   --gpu 0   --data_name zinc250k   --property_name qed --topk 2000  --property_model_path qed_model.pt --debug false  --topscore 2>&1 | tee  zinc250k_top_qed_optimized.log
-# Input: --property_model_path qed_model.pt is the regression model
+python optimize_property.py -snapshot model_snapshot_epoch_200  --hyperparams_path moflow-params.json --batch_size 256 --model_dir results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask   --gpu 0   --data_name zinc250k   --property_name qed --topk 2000  --property_model_path qed_model.pdparams --debug false  --topscore 2>&1 | tee  zinc250k_top_qed_optimized.log
+# Input: --property_model_path qed_model.pdparams is the regression model
 # Output: dump a ranked list of generated optimized and novel molecules w.r.t qed
 ```
 #### Illustrations of molecules with top QED
-![Optimization](mflow/fig/top_qed2.png)
 
 #### Constrained Optimizing zinc250k w.r.t plogp(or qed) + similarity property
 #### to train an additional MLP from latent space to plogp property
 ```
 python optimize_property.py -snapshot model_snapshot_epoch_200  --hyperparams_path moflow-params.json --batch_size 256 --model_dir results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask   --gpu 0  --max_epochs 3  --weight_decay 1e-2  --data_name zinc250k  --hidden 16,  --temperature 1.0  --property_name plogp 2>&1 | tee training_optimize_zinc250k_plogp.log
-# Output: a molecular property prediction model for optimization, say named as plogp_model.pt
-# e.g. saving plogp  regression model to: results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask/plogp_model.pt
+# Output: a molecular property prediction model for optimization, say named as plogp_model.pdparams
+# e.g. saving plogp  regression model to: results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask/plogp_model.pdparams
 # Train and save model done! Time 473.74 seconds
 # Can tune:
 #         --max_epochs 3  
@@ -211,52 +200,12 @@ python optimize_property.py -snapshot model_snapshot_epoch_200  --hyperparams_pa
 ```
 #### To optimize existing molecules to get novel molecules with optimized plogp scores and constrained similarity
 ```
-python optimize_property.py -snapshot model_snapshot_epoch_200  --hyperparams_path moflow-params.json --batch_size 256 --model_dir results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask   --gpu 0    --data_name zinc250k    --property_name plogp --topk 800 --property_model_path qed_model.pt   --consopt  --sim_cutoff 0 2>&1 | tee  zinc250k_constrain_optimize_plogp.log
-# Input: --property_model_path qed_model.pt or plogp_model.pt is the regression model
+python optimize_property.py -snapshot model_snapshot_epoch_200  --hyperparams_path moflow-params.json --batch_size 256 --model_dir results/zinc250k_512t2cnn_256gnn_512-64lin_10flow_19fold_convlu2_38af-1-1mask   --gpu 0    --data_name zinc250k    --property_name plogp --topk 800 --property_model_path qed_model.pdparams   --consopt  --sim_cutoff 0 2>&1 | tee  zinc250k_constrain_optimize_plogp.log
+# Input: --property_model_path qed_model.pdparams or plogp_model.pdparams is the regression model
          --sim_cutoff 0 (or 0.2, 0.4 etc for similarity)
          --topk 800 (choose first 800 molecules with worset property values for improving)
 # Output: 
-# Using qed_model.pt for optimizing plogp with 
+# Using qed_model.pdparams for optimizing plogp with 
 # Because qed and plogp have some correlations, here we use both qed/plogp model for 2 optimization tasks
-# --sim_cutoff 0:
-#   similarity: 0.300610 +/- 0.201674 
-#   Improvement:  8.612461 +/- 5.436995
-#   success rate: 0.98875
-# --sim_cutoff 0.2:
-#   similarity:  0.434700 +/-  0.196490 
-#   Improvement:  7.057115 +/-  5.041250
-#   success rate: 0.9675
-# --sim_cutoff 0.4:
-#   similarity:  0.608440 +/-   0.177670 
-#   Improvement:  4.712418 +/-   4.549682
-#   success rate: 0.8575
-# --sim_cutoff 0.6:
-#   similarity:   0.792550 +/- 0.144577   
-#   Improvement:   2.095266 +/-   2.858545  
-#   success rate:  0.5825
 
-# Using plogp_model.pt for optimizing plogp with 
-# --sim_cutoff 0:
-#    similarity:  0.260503 +/- 0.195945
-#   Improvement:  9.238813 +/-  6.279859
-#   success rate: 0.9925
-# --sim_cutoff 0.2:
-#    similarity:  0.425541 +/- 0.198020
-#    Improvement:  7.246221 +/-  5.325543
-#    success rate: 0.9575
-# --sim_cutoff 0.4:
-#    similarity:   0.625976 +/- 0.189293
-#    Improvement:  4.504411 +/-  4.712031
-#    success rate: 0.8425
-# --sim_cutoff 0.6:
-#    similarity:   0.810805 +/- 0.146080
-#    Improvement:  1.820525 +/-  2.595302
-#    success rate: 0.565
-```
-More configurations please refer to our codes optimize_property.py and the optimization chapter in our paper.
-#### One illustration of optimizing plogp
-![optimiation plogp](mflow/fig/copt.png)
-
-
-
-
+More configurations please refer to codes optimize_property.py and the optimization chapter in paper.
